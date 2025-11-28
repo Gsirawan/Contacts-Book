@@ -12,8 +12,13 @@ import (
 	"golang.org/x/text/language"
 )
 
-// import("bufio")
 const displayMenu = "(1). Add Contact \n(2). List Contacts \n(3). Search\n(4). Exit"
+
+type Contact struct {
+	Name   string
+	Email  string
+	Mobile string
+}
 
 // create new contacts
 func addContact() {
@@ -80,6 +85,12 @@ func addContact() {
 		log.Fatalf("Error reading input %v:\n\n%v:\n", mobile, err)
 		return
 	}
+	// adding new contact
+	newContact := Contact{
+		Name:   name,
+		Email:  email,
+		Mobile: mobile,
+	}
 
 	// creare the file
 	file, err = os.OpenFile("contacts.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
@@ -95,7 +106,7 @@ func addContact() {
 	}()
 
 	// write on the file
-	_, err = fmt.Fprintf(file, "%s,%s,%s\n", name, email, mobile)
+	_, err = fmt.Fprintf(file, "%s,%s,%s\n", newContact.Name, newContact.Email, newContact.Mobile)
 	if err != nil {
 		log.Fatalf("Error writing to file %v\n:", err)
 		return
@@ -121,6 +132,7 @@ func listContact() {
 			log.Fatalf("Error closing file %v\n:", err)
 		}
 	}()
+
 	fmt.Println("--- List of Contents ---")
 	scanner := bufio.NewScanner(file)
 	fmt.Println("┃        Name        ┃        Email        ┃        Mobile        ┃")
@@ -128,9 +140,39 @@ func listContact() {
 	for scanner.Scan() {
 		line := scanner.Text()
 		part := strings.Split(line, ",")
-		fmt.Printf("|%-20s|%-21s|%-20s", part[0], part[1], part[2])
+		contact := Contact{
+			Name:   part[0],
+			Email:  part[1],
+			Mobile: part[2],
+		}
+		fmt.Printf("|%-20s|%-21s|%-20s", contact.Name, contact.Email, contact.Mobile)
 		fmt.Printf("\n")
 	}
+	fmt.Println("---------------------------------------")
+}
+
+func countContact() {
+	var err error
+	var file *os.File
+	counter := 0
+
+	file, err = os.OpenFile("contacts.txt", os.O_RDONLY, 0o644)
+	if err != nil {
+		log.Fatalf("Error Opening the file %v\n", err)
+	}
+
+	defer func() {
+		err = file.Close()
+		if err != nil {
+			log.Fatalf("Error closing file %v\n:", err)
+		}
+	}()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		counter++
+	}
+	fmt.Printf("Contact available: %d\n", counter)
 	fmt.Println("---------------------------------------")
 }
 
@@ -155,6 +197,7 @@ func main() {
 			addContact()
 		} else if choice == "2" {
 			listContact()
+			countContact()
 		} else if choice == "3" {
 			search()
 		} else if choice == "4" {
