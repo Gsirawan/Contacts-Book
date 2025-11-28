@@ -1,0 +1,6 @@
+max,m@m.com,456765443
+Zen,zen@zen.com,12345
+Max Payne,12345,12345
+Rami Mkdoos,rami@makdoos.net,123456
+Hamza Laban,hamza@laban.orh,055
+Dude Man,dude@man.me,+971578987987
