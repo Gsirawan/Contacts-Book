@@ -151,6 +151,7 @@ func listContact() {
 	fmt.Println("---------------------------------------")
 }
 
+// Contacts counter
 func countContact() {
 	var err error
 	var file *os.File
@@ -172,15 +173,60 @@ func countContact() {
 	for scanner.Scan() {
 		counter++
 	}
-	fmt.Printf("Contact available: %d\n", counter)
+	fmt.Printf("Contacts available: %d\n", counter)
 	fmt.Println("---------------------------------------")
 }
 
+// Search for contact
 func search() {
-	fmt.Println("Search for contact:")
-	fmt.Println("------------------")
+	var err error
+	var file *os.File
+	found := false
+	fmt.Println("Serrch for contact by name:")
+	fmt.Println("---------------------------")
+	reader := bufio.NewReader(os.Stdin)
+	userInput, err := reader.ReadString('\n')
+	userInput = strings.TrimSpace(userInput)
+	file, err = os.OpenFile("contacts.txt", os.O_RDONLY, 0o644)
+	if err != nil {
+		log.Fatalf("Error Opening the file %v\n", err)
+	}
+
+	defer func() {
+		err = file.Close()
+		if err != nil {
+			log.Fatalf("Error closing file %v\n:", err)
+		}
+	}()
+
+	scanner := bufio.NewScanner(file)
+	fmt.Printf("Here's all the available contacrs for %v\n", userInput)
+	fmt.Println("--------------------------------------------")
+	for scanner.Scan() {
+		line := scanner.Text()
+		part := strings.Split(line, ",")
+		contact := Contact{
+			Name:   part[0],
+			Email:  part[1],
+			Mobile: part[2],
+		}
+		// if strings.EqualFold(contact.Name, userInput) {
+		if strings.Contains(strings.ToLower(contact.Name), strings.ToLower(userInput)) {
+			fmt.Printf("|%-20s|%-21s|%-20s\n", contact.Name, contact.Email, contact.Mobile)
+			found = true
+		}
+	}
+	if !found {
+		fmt.Printf("there are no contacts by this %v\n", userInput)
+	}
+	if err != nil {
+		log.Fatalf("Error reading input %v:\n\n%v:\n", userInput, err)
+		return
+	}
+	fmt.Println("=====================================================")
 }
 
+// The application!!
 func main() {
 	var choice string
 	for {
