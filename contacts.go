@@ -299,13 +299,6 @@ func deleteContact() {
 		log.Fatalf("Error opening file %v\n:", err)
 		return
 	}
-	defer func() {
-		err = file.Close()
-		if err != nil {
-			log.Fatalf("Error closing file %v\n:", err)
-			return
-		}
-	}()
 
 	// write on the file
 	for _, contact := range remainingContacts {
