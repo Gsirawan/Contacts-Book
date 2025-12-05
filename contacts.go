@@ -312,6 +312,16 @@ func deleteContact() {
 	fmt.Println("=====================================================")
 }
 
+// Edit contact
+func editContact() {
+	// var err error
+	// var file *os.File
+	var print string
+	fmt.Printf("%s\n", print)
+}
+
+// #############################################################################################
+
 // The application!!
 func main() {
 	var choice string
@@ -335,7 +345,7 @@ func main() {
 		} else if choice == "4" {
 			deleteContact()
 		} else if choice == "5" {
-			search()
+			editContact()
 		} else if choice == "6" {
 			fmt.Println("Goodbye!")
 			break
