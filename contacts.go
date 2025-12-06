@@ -312,11 +312,14 @@ func deleteContact() {
 	fmt.Println("=====================================================")
 }
 
+// ########################################################################################
+
 // Edit contact
 func editContact() {
 	var err error
 	var file *os.File
 	var allContacts []Contact
+	var remainingContacts []Contact
 
 	found := false
 	fmt.Println("Edit contact, find by name:")
@@ -353,14 +356,23 @@ func editContact() {
 			fmt.Printf("|%-20s|%-21s|%-20s\n", contact.Name, contact.Email, contact.Mobile)
 			found = true
 
-			fmt.Println("Delete this contac? (y/n):")
+			fmt.Println("Edit this contac? (y/n):")
 			fmt.Println("---------------------------")
 			confirm, err := reader.ReadString('\n')
 			confirm = strings.TrimSpace(confirm)
 			if err != nil {
+				log.Fatalf("MemgraphError reading input %v:\n\n%v:\n", userInput, err)
+				return
+			}
+			fmt.Println("What to edit? (1) Name (2) Email (3) Mobile")
+			fmt.Println("---------------------------")
+			editChoice, err := reader.ReadString('\n')
+			editChoice = strings.TrimSpace(editChoice)
+			if err != nil {
 				log.Fatalf("Error reading input %v:\n\n%v:\n", userInput, err)
 				return
 			}
+
 			if confirm == "y" {
 				// don't append
 			} else {
