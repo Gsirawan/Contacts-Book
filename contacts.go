@@ -319,7 +319,7 @@ func editContact() {
 	var err error
 	var file *os.File
 	var allContacts []Contact
-	var remainingContacts []Contact
+	var i int
 
 	found := false
 	fmt.Println("Edit contact, find by name:")
@@ -351,9 +351,9 @@ func editContact() {
 		allContacts = append(allContacts, contact)
 		// fmt.Println(allContacts)
 	}
-	for _, contact := range allContacts {
-		if strings.Contains(strings.ToLower(contact.Name), strings.ToLower(userInput)) {
-			fmt.Printf("|%-20s|%-21s|%-20s\n", contact.Name, contact.Email, contact.Mobile)
+	for i = range allContacts {
+		if strings.Contains(strings.ToLower(allContacts[i].Name), strings.ToLower(userInput)) {
+			fmt.Printf("|%-20s|%-21s|%-20s\n", allContacts[i].Name, allContacts[i].Email, allContacts[i].Mobile)
 			found = true
 
 			fmt.Println("Edit this contac? (y/n):")
@@ -364,22 +364,54 @@ func editContact() {
 				log.Fatalf("MemgraphError reading input %v:\n\n%v:\n", userInput, err)
 				return
 			}
-			fmt.Println("What to edit? (1) Name (2) Email (3) Mobile")
-			fmt.Println("---------------------------")
-			editChoice, err := reader.ReadString('\n')
-			editChoice = strings.TrimSpace(editChoice)
-			if err != nil {
-				log.Fatalf("Error reading input %v:\n\n%v:\n", userInput, err)
-				return
-			}
-
 			if confirm == "y" {
-				// don't append
-			} else {
-				remainingContacts = append(remainingContacts, contact)
+				fmt.Println("What to edit? (1).Name | (2).Email | (3).Mobile")
+				fmt.Println("---------------------------")
+				editChoice, err := reader.ReadString('\n')
+				editChoice = strings.TrimSpace(editChoice)
+				if err != nil {
+					log.Fatalf("Error reading input %v:\n\n%v:\n", userInput, err)
+					return
+				}
+				if editChoice == "1" {
+					fmt.Println("Enter new name:")
+					newName, _ := reader.ReadString('\n')
+					newName = strings.TrimSpace(newName)
+					upperC := cases.Title(language.English)
+					newName = upperC.String(newName)
+					allContacts[i].Name = newName // <-- MODIFY ORIGINAL
+				}
+				if editChoice == "2" {
+					pattern := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
+					fmt.Println("Enter new email:")
+					for {
+						newEmail, _ := reader.ReadString('\n')
+						newEmail = strings.TrimSpace(newEmail)
+						match, _ := regexp.MatchString(pattern, newEmail)
+						if !match {
+							fmt.Println("Please Enter a valid email address!")
+						} else {
+							allContacts[i].Email = newEmail
+							break
+						}
+					}
+				}
+				if editChoice == "3" {
+					fmt.Println("Enter new mobile:")
+					for {
+						newMobile, _ := reader.ReadString('\n')
+						newMobile = strings.TrimSpace(newMobile)
+						zeroCheck := strings.HasPrefix(newMobile, "0")
+						if len(newMobile) != 10 || !zeroCheck {
+							fmt.Println("Please Enter a valid mobile number, Start with '0'")
+						} else {
+							newMobile = strings.Replace(newMobile, "0", "+971", 1)
+							allContacts[i].Mobile = newMobile
+							break
+						}
+					}
+				}
 			}
-		} else {
-			remainingContacts = append(remainingContacts, contact)
 		}
 	}
 	if !found {
@@ -398,7 +430,7 @@ func editContact() {
 	}
 
 	// write on the file
-	for _, contact := range remainingContacts {
+	for _, contact := range allContacts {
 		_, err = fmt.Fprintf(file, "%s,%s,%s\n", contact.Name, contact.Email, contact.Mobile)
 		if err != nil {
 			log.Fatalf("Error writing to file: %v\n", err)
