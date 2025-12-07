@@ -12,7 +12,10 @@ import (
 	"golang.org/x/text/language"
 )
 
-const displayMenu = "(1). Add Contact \n(2). List Contacts \n(3). Search \n(4). Delete Contact \n(5). Edit Contact \n(6). Exit"
+const (
+	displayMenu = "(1). Add Contact \n(2). List Contacts \n(3). Search \n(4). Delete Contact \n(5). Edit Contact \n(6). Exit"
+	filePath    = "contacts.txt"
+)
 
 type Contact struct {
 	Name   string
@@ -93,7 +96,7 @@ func addContact() {
 	}
 
 	// creare the file
-	file, err = os.OpenFile("contacts.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	file, err = os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		log.Fatalf("Error opening file %v\n:", err)
 		return
@@ -121,7 +124,7 @@ func listContact() {
 	var err error
 	var file *os.File
 
-	file, err = os.OpenFile("contacts.txt", os.O_RDONLY, 0o644)
+	file, err = os.OpenFile(filePath, os.O_RDONLY, 0o644)
 	if err != nil {
 		log.Fatalf("Error Opening the file %v\n", err)
 	}
@@ -157,7 +160,7 @@ func countContact() {
 	var file *os.File
 	counter := 0
 
-	file, err = os.OpenFile("contacts.txt", os.O_RDONLY, 0o644)
+	file, err = os.OpenFile(filePath, os.O_RDONLY, 0o644)
 	if err != nil {
 		log.Fatalf("Error Opening the file %v\n", err)
 	}
@@ -187,7 +190,7 @@ func search() {
 	reader := bufio.NewReader(os.Stdin)
 	userInput, err := reader.ReadString('\n')
 	userInput = strings.TrimSpace(userInput)
-	file, err = os.OpenFile("contacts.txt", os.O_RDONLY, 0o644)
+	file, err = os.OpenFile(filePath, os.O_RDONLY, 0o644)
 	if err != nil {
 		log.Fatalf("Error Opening the file %v\n", err)
 	}
@@ -200,7 +203,7 @@ func search() {
 	}()
 
 	scanner := bufio.NewScanner(file)
-	fmt.Printf("Here's all the available contacrs for %v\n", userInput)
+	fmt.Printf("Here's all the available contacts for %v\n", userInput)
 	fmt.Println("--------------------------------------------")
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -239,7 +242,7 @@ func deleteContact() {
 	reader := bufio.NewReader(os.Stdin)
 	userInput, err := reader.ReadString('\n')
 	userInput = strings.TrimSpace(userInput)
-	file, err = os.OpenFile("contacts.txt", os.O_RDONLY, 0o644)
+	file, err = os.OpenFile(filePath, os.O_RDONLY, 0o644)
 	if err != nil {
 		log.Fatalf("Error Opening the file %v\n", err)
 	}
@@ -268,7 +271,7 @@ func deleteContact() {
 			fmt.Printf("|%-20s|%-21s|%-20s\n", contact.Name, contact.Email, contact.Mobile)
 			found = true
 
-			fmt.Println("Delete this contac? (y/n):")
+			fmt.Println("Delete this contact? (y/n):")
 			fmt.Println("---------------------------")
 			confirm, err := reader.ReadString('\n')
 			confirm = strings.TrimSpace(confirm)
@@ -294,7 +297,7 @@ func deleteContact() {
 	}
 	// creare the file
 
-	file, err = os.OpenFile("contacts.txt", os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0o644)
+	file, err = os.OpenFile(filePath, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		log.Fatalf("Error opening file %v\n:", err)
 		return
@@ -308,7 +311,7 @@ func deleteContact() {
 			return
 		}
 	}
-	fmt.Println("Successfully updateing contacts list")
+	fmt.Println("Successfully updating contacts list")
 	fmt.Println("=====================================================")
 }
 
@@ -319,7 +322,6 @@ func editContact() {
 	var err error
 	var file *os.File
 	var allContacts []Contact
-	var i int
 
 	found := false
 	fmt.Println("Edit contact, find by name:")
@@ -327,7 +329,7 @@ func editContact() {
 	reader := bufio.NewReader(os.Stdin)
 	userInput, err := reader.ReadString('\n')
 	userInput = strings.TrimSpace(userInput)
-	file, err = os.OpenFile("contacts.txt", os.O_RDONLY, 0o644)
+	file, err = os.OpenFile(filePath, os.O_RDONLY, 0o644)
 	if err != nil {
 		log.Fatalf("Error Opening the file %v\n", err)
 	}
@@ -351,12 +353,12 @@ func editContact() {
 		allContacts = append(allContacts, contact)
 		// fmt.Println(allContacts)
 	}
-	for i = range allContacts {
+	for i := range allContacts {
 		if strings.Contains(strings.ToLower(allContacts[i].Name), strings.ToLower(userInput)) {
 			fmt.Printf("|%-20s|%-21s|%-20s\n", allContacts[i].Name, allContacts[i].Email, allContacts[i].Mobile)
 			found = true
 
-			fmt.Println("Edit this contac? (y/n):")
+			fmt.Println("Edit this contact? (y/n):")
 			fmt.Println("---------------------------")
 			confirm, err := reader.ReadString('\n')
 			confirm = strings.TrimSpace(confirm)
@@ -423,7 +425,7 @@ func editContact() {
 	}
 	// creare the file
 
-	file, err = os.OpenFile("contacts.txt", os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0o644)
+	file, err = os.OpenFile(filePath, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		log.Fatalf("Error opening file %v\n:", err)
 		return
@@ -437,7 +439,7 @@ func editContact() {
 			return
 		}
 	}
-	fmt.Println("Successfully updateing contacts list")
+	fmt.Println("Successfully updating contacts list")
 	fmt.Println("=====================================================")
 }
 
