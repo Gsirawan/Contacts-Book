@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // Screen/State
@@ -39,6 +42,7 @@ type model struct {
 	table         table.Model
 	focusIndex    int
 	inputs        []textinput.Model
+	errorMsg      string
 }
 
 func initialModel() model {
@@ -89,9 +93,25 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				email := m.inputs[1].Value()
 				mobile := m.inputs[2].Value()
 				if name == "" || email == "" || mobile == "" {
+					m.errorMsg = "All fields are required"
+					return m, nil
+				}
+				// Validate email
+				if !isValidEmail(email) {
+					// TODO: Show error message to user
+					m.errorMsg = "Invalid email format"
 					return m, nil
 				}
 
+				// Validate mobile
+				if !isValidMobile(mobile) {
+					// TODO: Show error message to user
+					m.errorMsg = "Mobile must be 10 digits starting with 0"
+					return m, nil
+				}
+				// Format and capitalize
+				name = capitalizeName(name)
+				mobile = formatMobile(mobile)
 				// Save to file
 				saveContact(Contact{
 					Name:   name,
@@ -101,6 +121,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 				// Reset inputs and go back to menu
 				m.inputs = initialInputs()
+				m.errorMsg = ""
 				m.currentScreen = menuScreen
 				m.cursor = 0
 				return m, nil
@@ -175,7 +196,7 @@ func makeContactTable(contacts []Contact) table.Model {
 		table.WithColumns(columns),
 		table.WithRows(rows),
 		table.WithFocused(true),
-		table.WithHeight(10),
+		table.WithHeight(20),
 	)
 
 	s := table.DefaultStyles()
@@ -198,7 +219,12 @@ func saveContact(contact Contact) {
 	if err != nil {
 		return
 	}
-	defer file.Close()
+	defer func() {
+		err = file.Close()
+		if err != nil {
+			log.Fatalf("Error closing file %v\n:", err)
+		}
+	}()
 
 	fmt.Fprintf(file, "%s,%s,%s\n", contact.Name, contact.Email, contact.Mobile)
 }
@@ -259,6 +285,33 @@ func initialInputs() []textinput.Model {
 	return inputs
 }
 
+func isValidEmail(email string) bool {
+	pattern := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
+	matched, _ := regexp.MatchString(pattern, email)
+	return matched
+}
+
+func isValidMobile(mobile string) bool {
+	// Check length and starts with 0
+	if len(mobile) != 10 {
+		return false
+	}
+	if !strings.HasPrefix(mobile, "0") {
+		return false
+	}
+	return true
+}
+
+func formatMobile(mobile string) string {
+	// Replace leading 0 with +971
+	return strings.Replace(mobile, "0", "+971", 1)
+}
+
+func capitalizeName(name string) string {
+	caser := cases.Title(language.English)
+	return caser.String(name)
+}
+
 func (m model) View() string {
 	if m.currentScreen == menuScreen {
 		s := "Contact Manager\n\n"
@@ -282,11 +335,17 @@ func (m model) View() string {
 			BorderForeground(lipgloss.Color("62")).
 			Padding(1, 30).
 			Render("Contact List")
-		return s + "\n\n" + m.table.View() + "\n\nPress ESC to go back, and 'q' to quit\n"
+		footer := fmt.Sprintf("\nTotal: %d contacts\n", len(m.contacts))
+		return s + "\n\n" + m.table.View() + footer + "\nPress ESC to go back, and 'q' to quit\n"
 	}
 	if m.currentScreen == addScreen {
 		s := "Add New Contact\n\n"
-
+		if m.errorMsg != "" {
+			errorStyle := lipgloss.NewStyle().
+				Foreground(lipgloss.Color("196")). // Red
+				Bold(true)
+			s += errorStyle.Render("❌ "+m.errorMsg) + "\n\n"
+		}
 		s += "Name:\n"
 		s += m.inputs[0].View() + "\n\n"
 
@@ -304,7 +363,11 @@ func (m model) View() string {
 }
 
 func main() {
-	p := tea.NewProgram(initialModel())
+	p := tea.NewProgram(
+		initialModel(),
+		tea.WithAltScreen(),       // Full screen mode
+		tea.WithMouseCellMotion(), // Optional: mouse support
+	)
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Error: %v", err)
 	}
