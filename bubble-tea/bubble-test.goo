@@ -1,0 +1,47 @@
+package main
+
+import (
+	"fmt"
+
+	tea "github.com/charmbracelet/bubbletea"
+)
+
+type model struct {
+	counter int
+}
+
+func initialModel() model {
+	return model{
+		counter: 0,
+	}
+}
+
+func (m model) Init() tea.Cmd {
+	return nil
+}
+
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "q":
+			return m, tea.Quit
+		case "up":
+			m.counter++
+		case "down":
+			m.counter--
+		}
+	}
+	return m, nil
+}
+
+func (m model) View() string {
+	return fmt.Sprintf("Counter: %d\n\nPress up/down to change, q tp quit", m.counter)
+}
+
+func main() {
+	p := tea.NewProgram(initialModel())
+	if _, err := p.Run(); err != nil {
+		fmt.Printf("Error: %v", err)
+	}
+}

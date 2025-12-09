@@ -363,7 +363,7 @@ func editContact() {
 			confirm, err := reader.ReadString('\n')
 			confirm = strings.TrimSpace(confirm)
 			if err != nil {
-				log.Fatalf("MemgraphError reading input %v:\n\n%v:\n", userInput, err)
+				log.Fatalf("Error reading input %v:\n\n%v:\n", userInput, err)
 				return
 			}
 			if confirm == "y" {
